@@ -1,0 +1,20 @@
+﻿  Food.cpp
+  Game.cpp
+  GameMain.cpp
+  GameSettings.cpp
+  GameSettingSound.cpp
+  GameStateGameOver.cpp
+  GamestateMainMenu.cpp
+  GameStatePauseMenu.cpp
+  GameStatePlaying.cpp
+D:\XYZ C++ for gamedevelopment\part1\1 project-Snake\My snake game\My Snake game\SnakeGame10\SnakeGame\GameStatePlaying.cpp(105,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  GameStateRecords.cpp
+  GameStateSettingSound.cpp
+  MainMenu.cpp
+  Math.cpp
+  Rock.cpp
+  Snake.cpp
+  UI.cpp
+  Generating Code...
+D:\XYZ C++ for gamedevelopment\part1\1 project-Snake\My snake game\My Snake game\SnakeGame10\SnakeGame\Game.cpp(97,1): warning C4715: 'SnakeGame::UpdateGame': not all control paths return a value
+  SnakeGame.vcxproj -> D:\XYZ C++ for gamedevelopment\part1\1 project-Snake\My snake game\My Snake game\SnakeGame10\x64\Debug\SnakeGame.exe
