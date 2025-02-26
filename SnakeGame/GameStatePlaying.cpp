@@ -162,9 +162,23 @@ namespace SnakeGame
 
 	void UpdateGameStatePlaying(GameStatePlayingData& data, Game& game, float deltaTime)
 	{
+					
 		// Update pause timer if game hasn't started
 		if (!data.isGameStarted)
 		{
+			if (game.gameSettingsSound.isMusicEnabled())
+			{
+				data.gameBackgroundSound.setVolume(MUSIC_VOLUME);
+				if (data.gameBackgroundSound.getStatus() != sf::Sound::Playing)
+				{
+					data.gameBackgroundSound.play();
+				}
+			}
+			else
+			{
+				data.gameBackgroundSound.stop();
+				data.gameBackgroundSound.setVolume(0.f);
+			}
 			int currentSecond = static_cast<int>(std::ceil(data.pauseTimer));
 			int newSecond = static_cast<int>(std::ceil(data.pauseTimer));
 
@@ -178,19 +192,23 @@ namespace SnakeGame
 			return;  // Don't process game logic during pause
 		}
 				
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)||(sf::Keyboard::isKeyPressed(sf::Keyboard::D)))
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)||(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+			&& !IsOppositeDirection(data.snake.direction, SnakeDirection::Right))
 		{
 			data.snake.direction = SnakeDirection::Right;
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || (sf::Keyboard::isKeyPressed(sf::Keyboard::W)))
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+			&& !IsOppositeDirection(data.snake.direction, SnakeDirection::Up))
 		{
 			data.snake.direction = SnakeDirection::Up;
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || (sf::Keyboard::isKeyPressed(sf::Keyboard::A)))
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			&& !IsOppositeDirection(data.snake.direction, SnakeDirection::Left))
 		{
 			data.snake.direction = SnakeDirection::Left;
 		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || (sf::Keyboard::isKeyPressed(sf::Keyboard::S)))
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+			&& !IsOppositeDirection(data.snake.direction, SnakeDirection::Down))
 		{
 			data.snake.direction = SnakeDirection::Down;
 		}		
@@ -324,19 +342,27 @@ namespace SnakeGame
 		game.uiState.scoreText.setString("Food eaten:" + std::to_string(data.numEatenFood));
 
 		// Update background music state
-		if (game.gameSettingsSound.isMusicEnabled())
+		if (data.isGameStarted)
 		{
-			data.gameBackgroundSound.setVolume(MUSIC_VOLUME);
-			if (data.gameBackgroundSound.getStatus() != sf::Sound::Playing)
+			if (game.gameSettingsSound.isMusicEnabled())
 			{
-				data.gameBackgroundSound.play();
+				data.gameBackgroundSound.setVolume(MUSIC_VOLUME);
+				if (data.gameBackgroundSound.getStatus() != sf::Sound::Playing)
+				{
+					data.gameBackgroundSound.play();
+				}
+			}
+			else
+			{
+				data.gameBackgroundSound.stop();
+				data.gameBackgroundSound.setVolume(0.f);
 			}
 		}
 		else
 		{
 			data.gameBackgroundSound.stop();
-			data.gameBackgroundSound.setVolume(0.f);
-		}		
+		}
+		
 	}
 
 	void DrawGameStatePlaying(GameStatePlayingData& data, Game& game, sf::RenderWindow& window)

@@ -114,7 +114,7 @@ namespace SnakeGame
 		const float cellSizeX = static_cast<float>(SCREEN_WIDTH) / FoodS_GRID_CELLS_HORIZONTAL;
 		const float cellSizeY = static_cast<float>(SCREEN_HEIGHT) / FoodS_GRID_CELLS_VERTICAL;
 
-		const float playerHalfSize = SNAKE_SIZE / 2.0f;
+		const float playerHalfSize = SNAKE_SIZE / 2.0f-cellSizeX/4.0f;
 		const Vector2Df FoodCornerTL = { snakePosition.x - playerHalfSize,snakePosition.y - playerHalfSize };
 		const Vector2Df FoodCornerBR = { snakePosition.x + playerHalfSize,	snakePosition.y + playerHalfSize };
 

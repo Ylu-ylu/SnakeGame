@@ -33,8 +33,9 @@ namespace SnakeGame
 
 	Rectangle GetRockCollider(const Rock& rock)
 	{
-		return { { rock.rocksPosition.x - ROCK_SIZE / 2.f, rock.rocksPosition.y - ROCK_SIZE / 2.f },
-					{ ROCK_SIZE, ROCK_SIZE } };
+        const float collisionSize = ROCK_SIZE * 0.7f;
+        return { { rock.rocksPosition.x - collisionSize / 2.f, rock.rocksPosition.y - collisionSize / 2.f },
+                    { collisionSize, collisionSize } };
 	}
 
 	void SetRockPosition(Rock& rock, const Position2D& rocksPosition, const Snake& snake, const GameStatePlayingData& data)

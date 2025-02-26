@@ -102,17 +102,23 @@ namespace SnakeGame
 		return result;
 
 	}
-
+	bool IsOppositeDirection(SnakeDirection current, SnakeDirection newDirection)
+	{
+		return (current == SnakeDirection::Up && newDirection == SnakeDirection::Down) ||
+			(current == SnakeDirection::Down && newDirection == SnakeDirection::Up) ||
+			(current == SnakeDirection::Left && newDirection == SnakeDirection::Right) ||
+			(current == SnakeDirection::Right && newDirection == SnakeDirection::Left);
+	}
 
 	Rectangle GetSnakeCollider(const Snake& snake)
-	{
-		return { { snake.head->getPosition().x - SNAKE_SIZE / 2.f, snake.head->getPosition().y - SNAKE_SIZE / 2.f },
+	{				
+		return { { snake.head->getPosition().x - (SNAKE_SIZE / 2.f), snake.head->getPosition().y - (SNAKE_SIZE / 2.f )},
 					{ SNAKE_SIZE , SNAKE_SIZE} };
 	}
 
 	
 	void MoveSnake(Snake& snake, float timeDelta)
-	{		
+	{			
 		const float cellSizeX = static_cast<float>(SCREEN_WIDTH) / FoodS_GRID_CELLS_HORIZONTAL;
 		const float cellSizeY = static_cast<float>(SCREEN_HEIGHT) / FoodS_GRID_CELLS_VERTICAL;
 
@@ -159,20 +165,23 @@ namespace SnakeGame
 					auto bendSegment = snake.body.insert(snake.head, *snake.head);
 					if (!bendSegment->getGlobalBounds().intersects(snake.tail->getGlobalBounds()))
 					{				
+						size_t originalSize = snake.body.size();
+
 						ApplyBendToSegment(*bendSegment, snake.prevDirection, snake.direction, snake.textures[(size_t)SnakePart::BodyBend]);
 						bendSegment->setPosition(currentCellCenter);
 						// Update head position
 						snake.head->setPosition(currentCellCenter);
-						SetHeadSprite(snake, snake.head);
+						SetHeadSprite(snake, snake.head);					
+						
+						// Remove tail if not growing
+						if (!snake.isGrowSnake && snake.body.size() > originalSize)
+						{
+							//UpdateTailAfterRotation(snake, snake.prevDirection, snake.direction, timeDelta);
+							snake.body.erase(snake.tail++);
+						}
 						// Update tail position
 						newPosition = currentCellCenter + normalizedDirection * moveAmount;
 						snake.head->setPosition(newPosition);
-						// Remove tail if not growing
-						if (!snake.isGrowSnake && snake.body.size() > INITIAL_SNAKE_SIZE)
-						{
-							UpdateTailAfterRotation(snake, snake.prevDirection, snake.direction, timeDelta);
-							
-						}						
 					}
 				}
 			}
@@ -187,42 +196,23 @@ namespace SnakeGame
 			}
 		}
 		snake.prevDirection = snake.direction;
-
 	}   
 
 		void GrowSnake(Snake & snake)
-		{
+		{			
+			auto newTail = snake.body.insert(snake.tail, *snake.tail);
+
+			// Move new tail segment slightly back
+			sf::Vector2f tailDirection = GetVectorBetweenSprites(*std::next(snake.tail), *snake.tail);
+			newTail->setPosition(snake.tail->getPosition() + tailDirection);
+
+			// Update tail iterator
+			auto oldTail = snake.tail;
+			oldTail->setTexture(snake.textures[static_cast<size_t>(SnakePart::Body)]);
+			snake.tail = newTail;
 			snake.isGrowSnake = true;
-			// Create new segment at the head position
-			sf::Sprite newSegment = *snake.head;  // Copy current head properties
 
-			// Calculate new head position
-			sf::Vector2f newPosition = snake.head->getPosition() + GetDirectionVector(snake.direction);
-
-			// Insert new head segment
-			auto oldHead = snake.head;
-			snake.head = snake.body.insert(++snake.head, newSegment);
-
-			// Update new head position and sprite
-			snake.head->setPosition(newPosition);
-			SetHeadSprite(snake, snake.head);
-
-			// Update old head to body part
-			oldHead->setTexture(snake.textures[static_cast<size_t>(SnakePart::Body)]);
-
-			// Set proper rotation for body segment
-			float angle = 0.0f;
-			if (snake.direction == SnakeDirection::Up || snake.direction == SnakeDirection::Down)
-			{
-				angle = 0.0f;
-			}
-			else if (snake.direction == SnakeDirection::Left || snake.direction == SnakeDirection::Right)
-			{
-				angle = 90.0f;
-			}
-			oldHead->setRotation(angle);
-
-		}		
+		}	
 
 		void DrawSnake(Snake & snake, sf::RenderWindow & window)
 		{
@@ -322,83 +312,10 @@ namespace SnakeGame
 				curIt = nextIt;
 				nextIt = std::next(nextIt);
 			}
-
 			return false;
-		}
+		}		
 
-		bool CheckSnakeCollisionWithSprite(Snake & snake, const sf::Sprite & sprite)
-		{
-			// Get sprite bounds
-			sf::FloatRect spriteBounds = sprite.getGlobalBounds();
-
-			// Check collision with snake head first (most common case)
-			if (snake.head->getGlobalBounds().intersects(spriteBounds))
-			{
-				return true;
-			}
-
-			// Check each segment of the snake
-			for (auto it = snake.body.begin(); it != snake.head; ++it)
-			{
-				auto nextIt = std::next(it);
-
-				// Get bounds of current segment pair
-				auto curRect = it->getGlobalBounds();
-				auto nextRect = nextIt->getGlobalBounds();
-
-				// Create union rectangle for segment pair
-				sf::FloatRect unionRect;
-				unionRect.top = std::min(curRect.top, nextRect.top);
-				unionRect.left = std::min(curRect.left, nextRect.left);
-				unionRect.width = std::fabs(curRect.left - nextRect.left) + SNAKE_SIZE;
-				unionRect.height = std::fabs(curRect.top - nextRect.top) + SNAKE_SIZE;
-
-				// Check intersection with sprite
-				if (HasSnakeCollisionWithRect(snake, unionRect))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
-		void GetRotationSprite(Snake & snake, SnakeDirection & oldDirection, SnakeDirection & newDirection)
-		{
-			sf::Sprite& bendSprite = snake.sprite;
-			InitSprite(
-				bendSprite,
-				SNAKE_SIZE,
-				SNAKE_SIZE,
-				snake.textures[(size_t)SnakePart::BodyBend]
-			);
-			// Center the sprite's origin.
-			SetSpriteRelativeOrigin(bendSprite, 0.5f, 0.5f);
-
-
-			float angle = 0.f;
-			if (oldDirection == SnakeGame::SnakeDirection::Right && newDirection == SnakeGame::SnakeDirection::Up ||
-				oldDirection == SnakeGame::SnakeDirection::Down && newDirection == SnakeGame::SnakeDirection::Left) {
-				angle = 0.f;
-			}
-			else if (oldDirection == SnakeGame::SnakeDirection::Down && newDirection == SnakeGame::SnakeDirection::Right ||
-				oldDirection == SnakeGame::SnakeDirection::Left && newDirection == SnakeGame::SnakeDirection::Up) {
-				angle = 90.f;
-			}
-			else if (oldDirection == SnakeGame::SnakeDirection::Left && newDirection == SnakeGame::SnakeDirection::Down ||
-				oldDirection == SnakeGame::SnakeDirection::Up && newDirection == SnakeGame::SnakeDirection::Right) {
-				angle = 180;
-			}
-			else if (oldDirection == SnakeGame::SnakeDirection::Up && newDirection == SnakeGame::SnakeDirection::Left ||
-				oldDirection == SnakeGame::SnakeDirection::Right && newDirection == SnakeGame::SnakeDirection::Down) {
-				angle = 270.f;
-			}
-
-			bendSprite.setRotation(angle);
-
-			auto it = snake.body.begin();
-			auto nextIt = std::next(it);		
-			
-		}
+		
 		void ApplyBendToSegment(sf::Sprite& segment, SnakeDirection oldDirection, SnakeDirection newDirection, const sf::Texture& bendTexture)
 		{
 			// Set texture and fix the sprite's size.
@@ -458,24 +375,24 @@ namespace SnakeGame
 
 			if (nextSegment != snake.body.end())
 			{
-				float moveAmount = snake.speed * timeDelta;
+				const float moveAmount = snake.speed * timeDelta;
 				// Calculate needed tail adjustment
 				const auto direction = GetVectorBetweenSprites(*tailSegment, *nextSegment);
 				float distance = std::hypot(direction.x, direction.y);
-				float moveStep = std::min(moveAmount, distance);
+				//float moveStep = std::min(moveAmount, distance);
 				const sf::Vector2f moveAdjustment = (direction / distance);
 				if (distance > SNAKE_SIZE)
 				{
 					//Recalculate position adjustment
 					tailSegment->setPosition(tailSegment->getPosition() + moveAdjustment * (distance - SNAKE_SIZE));
-					SetTailSprite(snake, tailSegment);
+					
 				}
-				if (moveStep >= distance)
+				else
 				{
 					tailSegment->setPosition(tailSegment->getPosition() + moveAdjustment * moveAmount);
-				}
+					
+				}					
 			}
-
 		}
 		void UpdateTail(Snake& snake, float timeDelta)
 		{
@@ -491,8 +408,8 @@ namespace SnakeGame
 				// Calculate tail rotation angle based on movement direction
 				TailRotation(snake, snake.prevDirection, snake.direction);
 
-				if (moveAmount >= tailDist)
-				{
+				if (moveAmount >= tailDist)				{
+					
 					snake.tail = snake.body.erase(snake.tail);
 					SetTailSprite(snake, snake.tail);
 				}

@@ -50,14 +50,13 @@ namespace SnakeGame
 	void GrowSnake(Snake& snake);
 	void DrawSnake(Snake& snake, sf::RenderWindow& window);
 	bool HasSnakeCollisionWithRect(const Snake& snake, const sf::FloatRect& rect);
-	bool CheckSnakeCollisionWithHimself(Snake& snake);
-	bool CheckSnakeCollisionWithSprite(Snake& snake, const sf::Sprite& sprite);
+	bool CheckSnakeCollisionWithHimself(Snake& snake);	
 	sf::Vector2f GetDirectionVector(SnakeDirection direction);
 	Rectangle GetSnakeCollider(const Snake& snake);
-	void GetRotationSprite(Snake& snake, SnakeDirection& oldDirection, SnakeDirection& newDirection);
-
 	void ApplyBendToSegment(sf::Sprite& segment, SnakeDirection oldDirection, SnakeDirection newDirection, const sf::Texture& bendTexture);	
 	void TailRotation(Snake& snake, SnakeDirection oldDirection, SnakeDirection newDirection);
 	void UpdateTailAfterRotation(Snake& snake, SnakeDirection oldDirection, SnakeDirection newDirection, float timeDelta);
 	void UpdateTail(Snake& snake, float timeDelta);
+	bool IsOppositeDirection(SnakeDirection current, SnakeDirection newDirection);
+	
 }
