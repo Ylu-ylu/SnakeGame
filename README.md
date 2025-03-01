@@ -1,3 +1,6 @@
+### Start Game
+To start the game, run the SnakeGame.sln file in your IDE.
+
 ### Core Gameplay
 - Classic snake movement mechanics with collision detection
 - Progressive difficulty system with 5 levels (Easy to Max)
